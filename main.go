@@ -91,7 +91,14 @@ func main() {
 				// fmt.Println(youMsgs)
 
 				var history [][]string
-				for _, vv := range roundRs {
+				start := 0
+				if len(roundRs) > 5 {
+					start = len(roundRs) / 5 * 4
+				}
+				for i, vv := range roundRs {
+					if i < start {
+						continue
+					}
 					history = append(history, []string{vv.Prompt, vv.Response})
 				}
 				if len(history) == 0 {
