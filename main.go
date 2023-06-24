@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"os"
 	"strings"
 )
@@ -65,7 +66,9 @@ func main() {
 				var meMsgs []string
 				for j, vv := range vs[i:] {
 					if msg, name := getMsg(vv); name == me {
-						meMsgs = append(meMsgs, msg)
+						if msg != "" {
+							meMsgs = append(meMsgs, msg)
+						}
 						offset = j + 1
 					} else {
 						break
@@ -76,7 +79,9 @@ func main() {
 				var youMsgs []string
 				for _, vv := range vs[i+offset:] {
 					if msg, name := getMsg(vv); name == you {
-						youMsgs = append(youMsgs, msg)
+						if msg != "" {
+							youMsgs = append(youMsgs, msg)
+						}
 					} else {
 						break
 					}
@@ -94,6 +99,19 @@ func main() {
 				// fmt.Println(rs)
 			}
 		}
+	}
+
+	w, err := os.Create("result.json")
+	if err != nil {
+		panic(err)
+	}
+	for _, r := range rs {
+		m, err := json.Marshal(r)
+		if err != nil {
+			panic(err)
+		}
+		w.Write(m)
+		w.WriteString("\n")
 	}
 }
 
@@ -121,9 +139,6 @@ func getMsg(s string) (msg string, name string) {
 		name = me
 	} else if isYou {
 		name = you
-	}
-	if name == "" {
-		return "", ""
 	}
 	if n := name + ":"; strings.HasPrefix(s, n) {
 		return s[len(n):], name
