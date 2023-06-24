@@ -33,7 +33,7 @@ func main() {
 
 	type result struct {
 		io
-		History []io `json:"history"`
+		History [][]string `json:"history"`
 	}
 
 	var records []string
@@ -59,6 +59,8 @@ func main() {
 
 	var rs []result
 	for _, vs := range rounds {
+		var roundRs []result
+
 		for i, v := range vs {
 			if strings.HasPrefix(v, me) {
 				offset := 0
@@ -88,17 +90,28 @@ func main() {
 				}
 				// fmt.Println(youMsgs)
 
+				var history [][]string
+				for _, vv := range roundRs {
+					history = append(history, []string{vv.Prompt, vv.Response})
+				}
+				if len(history) == 0 {
+					history = make([][]string, 0)
+				}
+
 				if len(meMsgs) != 0 && len(youMsgs) != 0 {
-					rs = append(rs, result{
+					roundRs = append(roundRs, result{
 						io: io{
 							Prompt:   strings.Join(meMsgs, " "),
 							Response: strings.Join(youMsgs, " "),
 						},
+						History: history,
 					})
 				}
 				// fmt.Println(rs)
 			}
 		}
+
+		rs = append(rs, roundRs...)
 	}
 
 	w, err := os.Create("result.json")
