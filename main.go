@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -57,7 +58,16 @@ func main() {
 		rounds[len(rounds)-1] = append(rounds[len(rounds)-1], v)
 	}
 
-	var rs []result
+	var (
+		maxHistory  = 0
+		maxPrompt   = 0
+		maxResponse = 0
+
+		beyondLimitCount = 0
+		lenLimit         = 1024
+
+		rs []result
+	)
 	for _, vs := range rounds {
 		var roundRs []result
 
@@ -91,6 +101,7 @@ func main() {
 				// fmt.Println(youMsgs)
 
 				var history [][]string
+				historyLen := 0
 				start := 0
 				if len(roundRs) > 5 {
 					start = len(roundRs) / 5 * 4
@@ -100,16 +111,33 @@ func main() {
 						continue
 					}
 					history = append(history, []string{vv.Prompt, vv.Response})
+					historyLen += len(vv.Prompt) + len(vv.Response)
 				}
 				if len(history) == 0 {
 					history = make([][]string, 0)
+				}
+				if historyLen > maxHistory {
+					maxHistory = historyLen
+				}
+
+				prompt := strings.Join(meMsgs, " ")
+				response := strings.Join(youMsgs, " ")
+				if len(prompt) > maxPrompt {
+					maxPrompt = len(prompt)
+				}
+				if len(response) > maxResponse {
+					maxResponse = len(response)
+				}
+				if len(prompt) > lenLimit || len(response) > lenLimit || historyLen > lenLimit {
+					beyondLimitCount++
+					continue
 				}
 
 				if len(meMsgs) != 0 && len(youMsgs) != 0 {
 					roundRs = append(roundRs, result{
 						io: io{
-							Prompt:   strings.Join(meMsgs, " "),
-							Response: strings.Join(youMsgs, " "),
+							Prompt:   prompt,
+							Response: response,
 						},
 						History: history,
 					})
@@ -120,6 +148,11 @@ func main() {
 
 		rs = append(rs, roundRs...)
 	}
+
+	fmt.Println("maxHistory:", maxHistory)
+	fmt.Println("maxPrompt:", maxPrompt)
+	fmt.Println("maxResponse:", maxResponse)
+	fmt.Println("beyondLimitCount:", beyondLimitCount)
 
 	w, err := os.Create("result.json")
 	if err != nil {
