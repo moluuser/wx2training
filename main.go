@@ -27,14 +27,10 @@ const (
 )
 
 func main() {
-	type io struct {
-		Prompt   string `json:"prompt"`
-		Response string `json:"response"`
-	}
-
 	type result struct {
-		io
-		History [][]string `json:"history"`
+		Instruction string `json:"instruction"`
+		Input       string `json:"input"`
+		Output      string `json:"output"`
 	}
 
 	var records []string
@@ -59,11 +55,11 @@ func main() {
 	}
 
 	var (
-		maxHistory  = 0
 		maxPrompt   = 0
 		maxResponse = 0
 
 		beyondLimitCount = 0
+		count            = 0
 		lenLimit         = 1024
 
 		rs []result
@@ -100,26 +96,6 @@ func main() {
 				}
 				// fmt.Println(youMsgs)
 
-				var history [][]string
-				historyLen := 0
-				start := 0
-				if len(roundRs) > 5 {
-					start = len(roundRs) / 5 * 4
-				}
-				for i, vv := range roundRs {
-					if i < start {
-						continue
-					}
-					history = append(history, []string{vv.Prompt, vv.Response})
-					historyLen += len(vv.Prompt) + len(vv.Response)
-				}
-				if len(history) == 0 {
-					history = make([][]string, 0)
-				}
-				if historyLen > maxHistory {
-					maxHistory = historyLen
-				}
-
 				prompt := strings.Join(meMsgs, " ")
 				response := strings.Join(youMsgs, " ")
 				if len(prompt) > maxPrompt {
@@ -128,18 +104,16 @@ func main() {
 				if len(response) > maxResponse {
 					maxResponse = len(response)
 				}
-				if len(prompt) > lenLimit || len(response) > lenLimit || historyLen > lenLimit {
+				if len(prompt) > lenLimit || len(response) > lenLimit {
 					beyondLimitCount++
 					continue
 				}
 
 				if len(meMsgs) != 0 && len(youMsgs) != 0 {
+					count++
 					roundRs = append(roundRs, result{
-						io: io{
-							Prompt:   prompt,
-							Response: response,
-						},
-						History: history,
+						Instruction: prompt,
+						Output:      response,
 					})
 				}
 				// fmt.Println(rs)
@@ -149,23 +123,20 @@ func main() {
 		rs = append(rs, roundRs...)
 	}
 
-	fmt.Println("maxHistory:", maxHistory)
 	fmt.Println("maxPrompt:", maxPrompt)
 	fmt.Println("maxResponse:", maxResponse)
 	fmt.Println("beyondLimitCount:", beyondLimitCount)
+	fmt.Println("count:", count)
 
 	w, err := os.Create("result.json")
 	if err != nil {
 		panic(err)
 	}
-	for _, r := range rs {
-		m, err := json.Marshal(r)
-		if err != nil {
-			panic(err)
-		}
-		w.Write(m)
-		w.WriteString("\n")
+	m, err := json.Marshal(rs)
+	if err != nil {
+		panic(err)
 	}
+	w.Write(m)
 }
 
 func getMsg(s string) (msg string, name string) {
