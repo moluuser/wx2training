@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 type void struct{}
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	var records []string
-	r, err := os.Open("raw.txt")
+	r, err := os.Open("raw_test.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -154,7 +155,7 @@ func main() {
 	fmt.Println("maxResponse:", maxResponse)
 	fmt.Println("beyondLimitCount:", beyondLimitCount)
 
-	w, err := os.Create("result.json")
+	w, err := os.Create("result_test.json")
 	if err != nil {
 		panic(err)
 	}
@@ -164,6 +165,8 @@ func main() {
 			panic(err)
 		}
 		w.Write(m)
+		fmt.Println(string(m))
+		time.Sleep(time.Millisecond * 1000)
 		w.WriteString("\n")
 	}
 }
