@@ -22,8 +22,8 @@ var (
 )
 
 const (
-	me        = "Lollipop"
-	you       = "Mångata🌙"
+	me        = ""
+	you       = ""
 	separator = "- - - - - - - - - - - - - - -"
 )
 
