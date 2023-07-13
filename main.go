@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 )
 
 type void struct{}
@@ -165,8 +164,6 @@ func main() {
 			panic(err)
 		}
 		w.Write(m)
-		fmt.Println(string(m))
-		time.Sleep(time.Millisecond * 1000)
 		w.WriteString("\n")
 	}
 }
